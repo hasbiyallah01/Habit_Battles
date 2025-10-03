@@ -9,7 +9,7 @@ namespace Habit_Battles.Infrastructure.Repositories
     public class StrikeRepository : IStrikeRepository
     {
         private readonly HabitBattlesContext _context;
-        private StrikeRepository(HabitBattlesContext context)
+        public StrikeRepository(HabitBattlesContext context)
         {
             _context = context;
         }

@@ -9,7 +9,7 @@ namespace Habit_Battles.Infrastructure.Repositories
     public class ShopItemRepository : IShopItemRepository
     {
         private readonly HabitBattlesContext _context;
-        private ShopItemRepository(HabitBattlesContext context)
+        public ShopItemRepository(HabitBattlesContext context)
         {
             _context = context;
         }

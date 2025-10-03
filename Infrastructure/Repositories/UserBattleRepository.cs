@@ -1,44 +1,67 @@
 ﻿using Habit_Battles.Core.Application.Interfaces.Repositories;
 using Habit_Battles.Core.Domain.Entities;
+using Habit_Battles.Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace Habit_Battles.Infrastructure.Repositories
 {
     public class UserBattleRepository : IUserBattleRepository
     {
-        public Task<UserBattle> AddAsync(UserBattle userBattle)
+        private readonly HabitBattlesContext _context;
+        public UserBattleRepository(HabitBattlesContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task<bool> ExistsAsync(int id)
+        public async Task<UserBattle> AddAsync(UserBattle userBattle)
         {
-            throw new NotImplementedException();
+            await _context.Set<UserBattle>()
+                .AddAsync(userBattle);
+            _context.SaveChanges();
+
+            return userBattle;
         }
 
-        public Task<ICollection<UserBattle>> GetAllAsync()
+        public async Task<bool> ExistsAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.UserBattles.AnyAsync(a => a.Id == id);
         }
 
-        public Task<UserBattle> GetAsync(int id)
+        public async Task<ICollection<UserBattle>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Set<UserBattle>()
+                .ToListAsync();
         }
 
-        public Task<UserBattle> GetAsync(Expression<Func<UserBattle, bool>> exp)
+        public async Task<UserBattle> GetAsync(int id)
         {
-            throw new NotImplementedException();
+            var answer = await _context.Set<UserBattle>()
+                .Where(a => a.Id == id && !a.IsDeleted)
+                .SingleOrDefaultAsync();
+            return answer;
+        }
+
+        public async Task<UserBattle> GetAsync(Expression<Func<UserBattle, bool>> exp)
+        {
+             var answer = await _context.Set<UserBattle>()
+                .FirstOrDefaultAsync(exp);
+            return answer;
         }
 
         public void Remove(UserBattle userBattle)
         {
-            throw new NotImplementedException();
+            userBattle.IsDeleted = true;
+            _context.Set<UserBattle>()
+                .Update(userBattle);
+
         }
 
         public UserBattle Update(UserBattle userBattle)
         {
-            throw new NotImplementedException();
+            _context.Set<UserBattle>()
+                .Update(userBattle);
+            return userBattle;
         }
     }
 }
