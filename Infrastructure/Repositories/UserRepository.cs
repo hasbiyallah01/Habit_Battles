@@ -52,6 +52,14 @@ namespace Habit_Battles.Infrastructure.Repositories
                         .SingleOrDefaultAsync();
             return answer;
         }
+        public async Task<User> GetAsyncWithLogs(int id)
+        {
+            var answer = await _context.Set<User>()
+                        .Where(a => !a.IsDeleted && a.Id == id)
+                        .Include(a => a.HabitLogs)
+                        .SingleOrDefaultAsync();
+            return answer;
+        }
 
         public async Task<User> GetAsync(int id)
         {

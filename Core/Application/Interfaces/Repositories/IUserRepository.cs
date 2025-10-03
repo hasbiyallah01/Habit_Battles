@@ -10,6 +10,7 @@ namespace Habit_Battles.Core.Application.Interfaces.Repositories
         Task<User> GetAsync(string email);
         Task<User> GetAsync(Expression<Func<User, bool>> exp);
         Task<ICollection<User>> GetAllAsync();
+        Task<User> GetAsyncWithLogs(int id);
         void Remove(User user);
         User Update(User user);
         Task<bool> ExistsAsync(string email, int id);
