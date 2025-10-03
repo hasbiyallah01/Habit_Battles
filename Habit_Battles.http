@@ -1,0 +1,6 @@
+@Habit_Battles_HostAddress = http://localhost:5083
+
+GET {{Habit_Battles_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
