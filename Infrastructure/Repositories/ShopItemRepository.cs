@@ -60,6 +60,7 @@ namespace Habit_Battles.Infrastructure.Repositories
         public ShopItem Update(ShopItem shopItem)
         {
             _context.ShopItems.Update(shopItem);
+            _context.SaveChangesAsync();
             return shopItem;
         }
     }

@@ -80,12 +80,15 @@ namespace Habit_Battles.Core.Application.Services
                 };
             }
         }
-
         public async Task<BaseResponse<UserResponseModel>> GetCurrentUserAsync()
         {
             var user = _httpContext.HttpContext?.User;
             if (user == null || !(user.Identity?.IsAuthenticated ?? false))
-                return null;
+                return new BaseResponse<UserResponseModel>
+                { 
+                    IsSuccessful = false,
+                    Message = "User not Authenticated"
+                };
 
             var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
             var emailClaim = user.FindFirst(ClaimTypes.Email);
@@ -110,7 +113,6 @@ namespace Habit_Battles.Core.Application.Services
                 }
             };
         }
-
         public async Task<BaseResponse<LoginResponse>> GoogleLogin(string tokenId)
         {
             if (!tokenId.Contains("."))
@@ -196,11 +198,17 @@ namespace Habit_Battles.Core.Application.Services
                 };
             }
         }
-
         public async Task<BaseResponse<ICollection<UserResponseModel>>> GetAllUsers()
         {
             var users = await _userRepository.GetAllAsync();
-
+            if(users == null )
+            {
+                return new BaseResponse<ICollection<UserResponseModel>>
+                {
+                    Message = "No users",
+                    IsSuccessful = false,
+                };
+            }
             return new BaseResponse<ICollection<UserResponseModel>>
             {
                 Message = "List of users",
@@ -213,7 +221,6 @@ namespace Habit_Battles.Core.Application.Services
                 }).ToList(),
             };
         }
-
         public async Task<BaseResponse<UserResponseModel>> GetUser(int id)
         {
             var user = await _userRepository.GetAsync(id);
@@ -237,7 +244,6 @@ namespace Habit_Battles.Core.Application.Services
                 }
             };
         }
-
         public async Task<BaseResponse> RemoveUser(int id)
         {
             var user = await _userRepository.GetAsync(id);
@@ -259,7 +265,6 @@ namespace Habit_Battles.Core.Application.Services
                 IsSuccessful = true
             };
         }
-
         public async Task<BaseResponse> UpdateUser(int id, UserRequestModel request)
         {
             var user = await _userRepository.GetAsync(id);
@@ -310,7 +315,6 @@ namespace Habit_Battles.Core.Application.Services
                 IsSuccessful = true
             };
         }
-
         public async Task<BaseResponse<LoginResponse>> Login(LoginRequest model)
         {
             var user = await _userRepository.GetAsync(model.Email);
@@ -342,18 +346,21 @@ namespace Habit_Battles.Core.Application.Services
                 IsSuccessful = false
             };
         }
-
         public async Task<BaseResponse<ProfileResponse>> GetProfile(int id)
         {
             var user = await _userRepository.GetAsyncWithLogs(id);
             if (user == null)
             {
-
+                return new BaseResponse<ProfileResponse>
+                {
+                    IsSuccessful = false,
+                    Message = "Theres no user with this id or user not authenticated"
+                };
             }
 
             return new BaseResponse<ProfileResponse>
             {
-                Message = "",
+                Message = "User Profile Retrieved Successfully",
                 IsSuccessful = true,
                 Value = new ProfileResponse
                 {

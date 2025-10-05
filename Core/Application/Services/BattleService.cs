@@ -2,7 +2,6 @@
 using Habit_Battles.Core.Application.Interfaces.Services;
 using Habit_Battles.Core.Domain.Entities;
 using Habit_Battles.Core.Domain.Enums;
-using Habit_Battles.Infrastructure.Repositories;
 using Habit_Battles.Models;
 using Habit_Battles.Models.BattleModel;
 
@@ -25,15 +24,21 @@ namespace Habit_Battles.Core.Application.Services
             var battle = await _battlerepo.GetAsync(battleId);
             if (battle == null || battle.OpponentId != opponentId)
             {
-                return null;
-            };
+                return new BaseResponse<BattleAcceptResponse>
+                {
+                    IsSuccessful = false,
+                    Message = "Theres no active battle for this user",
+                    Value = new BattleAcceptResponse{}
+                };
+            }
+            ;
             battle.Status = Domain.Enums.Status.Active;
             _battlerepo.Update(battle);
 
             return new BaseResponse<BattleAcceptResponse>
             {
                 IsSuccessful = true,
-                Message = "",
+                Message = "Your battle is now active",
                 Value = new BattleAcceptResponse
                 {
                      Id = battleId,
@@ -41,7 +46,6 @@ namespace Habit_Battles.Core.Application.Services
                 }
             };
         }
-
         public async Task<BaseResponse<BattleResponse>> CreateBattle(BattleRequest request, int userId)
         {
             var user = await _userRepository.GetAsync(userId);
@@ -71,7 +75,7 @@ namespace Habit_Battles.Core.Application.Services
             var response = await _battlerepo.AddAsync(battle);
             return new BaseResponse<BattleResponse>
             {
-                Message = "",
+                Message = "Battle Successfully Created and Pending",
                 IsSuccessful = true,
                 Value = new BattleResponse
                 {
@@ -87,11 +91,18 @@ namespace Habit_Battles.Core.Application.Services
                 }
             };
         }
-
         public async Task<BaseResponse<BattleResponse?>> GetBattleStatusAsync(int battleId)
         {
             var battle = await _battlerepo.GetAsync(battleId);
-            if (battle == null) return null;
+            if (battle == null)
+            {
+                return new BaseResponse<BattleResponse?>
+                {
+                    IsSuccessful = false,
+                    Message = "No battle with this Id",
+                    Value = new BattleResponse { }
+                };
+            };
 
             var creatorId = int.Parse(battle.CreatedBy);
             var creator = await _userRepository.GetAsync(creatorId);
@@ -121,7 +132,7 @@ namespace Habit_Battles.Core.Application.Services
             return new BaseResponse<BattleResponse?>
             {
                  IsSuccessful = true,
-                  Message = " ",
+                  Message = "Battle successfully retrieved",
                   Value = new BattleResponse
                   {
                       Id = battle.Id,
@@ -146,12 +157,10 @@ namespace Habit_Battles.Core.Application.Services
                                Username = opponent.Username,
                                Streak = opponentStreak
                           }
-                      }                  }
+                      }
+                  }
             };
         }
-
-
-
         public async Task<BaseResponse<EndBattleResponse>> EndBattleAsync(int battleId, int winnerId)
         {
             var battle = await _battlerepo.GetAsync(battleId);
@@ -190,15 +199,27 @@ namespace Habit_Battles.Core.Application.Services
                 }
             };
         }
-
-        
-
-
         public async Task<BaseResponse<IEnumerable<LeaderBoardResponse>>> GetLeaderBoardAsync()
         {
             var users = await _userRepository.GetAllAsync();
+            if(users == null)
+            {
+                return new BaseResponse<IEnumerable<LeaderBoardResponse>>
+                {
+                    IsSuccessful = false,
+                    Message = "No Active Users",
+                };
+            }
 
             var battles = await _battlerepo.GetAllAsync();
+            if (battles == null)
+            {
+                return new BaseResponse<IEnumerable<LeaderBoardResponse>>
+                {
+                    IsSuccessful = false,
+                    Message = "No Active Battle",
+                };
+            }
 
             var leaderboard = users.Select(user =>
             {
@@ -223,16 +244,22 @@ namespace Habit_Battles.Core.Application.Services
                 Value = leaderboard
             };
         }
-
-
         public async Task<BaseResponse<object>> HandleStrikeAsync(int battleId, int userId, bool isRealTime = false, bool isSuccess = true)
         {
             var battle = await _battlerepo.GetAsync(battleId);
             if (battle == null)
-                return new BaseResponse<object> { IsSuccessful = false, Message = "Battle not found" };
+                return new BaseResponse<object> 
+                { 
+                    IsSuccessful = false, 
+                    Message = "Battle not found" 
+                };
 
             if (battle.Status != Status.Active)
-                return new BaseResponse<object> { IsSuccessful = false, Message = "Battle not active" };
+                return new BaseResponse<object> 
+                { 
+                    IsSuccessful = false, 
+                    Message = "Battle not active" 
+                };
 
             int.TryParse(battle.CreatedBy, out var creatorId);
             var opponentId = battle.OpponentId;
@@ -348,6 +375,14 @@ namespace Habit_Battles.Core.Application.Services
         public async Task<BaseResponse<object>> ProcessDailyResultsAsync()
         {
             var battles = await _battlerepo.GetActiveBattlesAsync();
+            if (battles == null)
+            {
+                return new BaseResponse<object>
+                {
+                    IsSuccessful = false,
+                    Message = "No Active Battle"
+                };
+            }
 
             foreach (var battle in battles)
             {
@@ -376,8 +411,10 @@ namespace Habit_Battles.Core.Application.Services
 
                 if (battle.CreatorHealth <= 0)
                     await EndBattleAsync(battle.Id, opponentId);
+
                 else if (battle.OpponentHealth <= 0)
                     await EndBattleAsync(battle.Id, creatorId);
+
                 else
                     _battlerepo.Update(battle);
             }
@@ -388,10 +425,17 @@ namespace Habit_Battles.Core.Application.Services
                 Message = "Daily battle results processed successfully."
             };
         }
-
         public async Task<BaseResponse<IEnumerable<BattleResponse>>> GetActiveBattlesAsync()
         {
             var activeBattles = await _battlerepo.GetActiveBattlesAsync();
+            if(activeBattles == null)
+            {
+                return new BaseResponse<IEnumerable<BattleResponse>>
+                {
+                    IsSuccessful = false,
+                    Message = "Active battles retrieved successfully",
+                };
+            }
 
             var response = activeBattles.Select(b => new BattleResponse
             {
@@ -415,6 +459,14 @@ namespace Habit_Battles.Core.Application.Services
         public async Task<BaseResponse<object>> ProcessDailyResultsForUserAsync(int userId)
         {
             var battles = await _battlerepo.GetActiveBattlesByUserAsync(userId);
+            if(battles == null)
+            {
+                return new BaseResponse<object>
+                {
+                    IsSuccessful = false,
+                    Message = "Daily results not processed for this user."
+                };
+            }
 
             foreach (var battle in battles)
             {
