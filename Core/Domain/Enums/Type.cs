@@ -1,7 +1,8 @@
 ﻿namespace Habit_Battles.Core.Domain.Enums
 {
-    public enum Type
+    public enum MonsterType
     {
+       default_monster,
        Avatar,
        Monster_Skin,
        Boost,

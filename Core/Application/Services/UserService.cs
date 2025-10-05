@@ -24,13 +24,20 @@ namespace Habit_Battles.Core.Application.Services
 
         public async Task<BaseResponse<UserResponseModel>> CreateUser(UserRequestModel request)
         {
-            int randomCode = new Random().Next(10000, 99999);
 
             if ( await _userRepository.ExistsAsync(request.Email))
             {
                 return new BaseResponse<UserResponseModel>
                 {
                     Message = "Email already exists!!!",
+                    IsSuccessful = false
+                };
+            }
+            if (await _userRepository.ExistsByNameAsync(request.UserName))
+            {
+                return new BaseResponse<UserResponseModel>
+                {
+                    Message = "Name already exists!!!",
                     IsSuccessful = false
                 };
             }
@@ -62,7 +69,7 @@ namespace Habit_Battles.Core.Application.Services
 
                 return new BaseResponse<UserResponseModel>
                 {
-                    Message = "Check your email and complete your registration",
+                    Message = "",
                     IsSuccessful = true,
                     Value = new UserResponseModel
                     {
@@ -74,7 +81,35 @@ namespace Habit_Battles.Core.Application.Services
             }
         }
 
+        public async Task<BaseResponse<UserResponseModel>> GetCurrentUserAsync()
+        {
+            var user = _httpContext.HttpContext?.User;
+            if (user == null || !(user.Identity?.IsAuthenticated ?? false))
+                return null;
 
+            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            var emailClaim = user.FindFirst(ClaimTypes.Email);
+            var fullNameClaim = user.FindFirst(ClaimTypes.Name);
+
+            if (idClaim == null || !int.TryParse(idClaim.Value, out int id))
+                return null;
+
+            var userEntity = await _userRepository.GetAsync(id);
+            if (userEntity == null)
+                return null;
+
+            return new BaseResponse<UserResponseModel>
+            {
+                IsSuccessful = true,
+                Message = "User Authenticated",
+                Value = new UserResponseModel
+                {
+                    Id = id,
+                    Email = emailClaim?.Value ?? string.Empty,
+                    UserName = fullNameClaim?.Value ?? string.Empty,
+                }
+            };
+        }
 
         public async Task<BaseResponse<LoginResponse>> GoogleLogin(string tokenId)
         {
@@ -279,6 +314,14 @@ namespace Habit_Battles.Core.Application.Services
         public async Task<BaseResponse<LoginResponse>> Login(LoginRequest model)
         {
             var user = await _userRepository.GetAsync(model.Email);
+            if(user == null)
+            {
+                return new BaseResponse<LoginResponse>
+                {
+                    Message = "Not found",
+                    IsSuccessful = false
+                };
+            }
             if (user.Email == model.Email && BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
                 return new BaseResponse<LoginResponse>

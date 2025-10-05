@@ -13,5 +13,6 @@ namespace Habit_Battles.Core.Application.Interfaces.Services
         Task<BaseResponse<UserResponseModel>> CreateUser(UserRequestModel request);
         Task<BaseResponse<LoginResponse>> GoogleLogin(string tokenId);
         Task<BaseResponse<ProfileResponse>> GetProfile(int id);
+        Task<BaseResponse<UserResponseModel>> GetCurrentUserAsync();
     }
 }

@@ -27,11 +27,14 @@ namespace Habit_Battles.Infrastructure.Repositories
             return await _context.Users.AnyAsync(x => x.Email == email);
         }
 
+        public async Task<bool> ExistsByNameAsync(string name)
+        {
+            return await _context.Users.AnyAsync(x => x.Username == name);
+        }
         public async Task<bool> ExistsAsync(string email, int id)
         {
             return await _context.Users.AnyAsync(x => x.Email == email && x.Id != id);
         }
-
         public User Update(User entity)
         {
             _context.Users.Update(entity);
@@ -49,6 +52,14 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             var answer = await _context.Set<User>()
                         .Where(a => !a.IsDeleted && a.Email == email)
+                        .SingleOrDefaultAsync();
+            return answer;
+        }
+
+        public async Task<User> GetByNamwAsync(string name)
+        {
+            var answer = await _context.Set<User>()
+                        .Where(a => !a.IsDeleted && a.Username == name)
                         .SingleOrDefaultAsync();
             return answer;
         }

@@ -33,6 +33,13 @@ namespace Habit_Battles.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<ICollection<Purchases>> GetAllAsync(int userId)
+        {
+            return await _context.Set<Purchases>()
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
+        }
+
         public async Task<Purchases> GetAsync(int id)
         {
             var answer = await _context.Set<Purchases>()
@@ -60,6 +67,7 @@ namespace Habit_Battles.Infrastructure.Repositories
         public Purchases Update(Purchases purchases)
         {
             _context.Purchases.Update(purchases);
+            _context.SaveChangesAsync();
             return purchases;
         }
     }

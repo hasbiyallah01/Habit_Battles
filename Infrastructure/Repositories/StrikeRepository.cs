@@ -32,6 +32,13 @@ namespace Habit_Battles.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<ICollection<Strike>> GetAllAsync(int battleId)
+        {
+            return await _context.Set<Strike>()
+                .Where(a => a.BattleId == battleId)
+                .ToListAsync();
+        }
+
         public async Task<Strike> GetAsync(int id)
         {
             var answer = await _context.Set<Strike>()
@@ -59,7 +66,24 @@ namespace Habit_Battles.Infrastructure.Repositories
         public Strike Update(Strike strike)
         {
             _context.Strikes.Update(strike);
+            _context.SaveChangesAsync();
             return strike;
+        }
+
+        public async Task<IEnumerable<Strike>> GetByBattleAndUserAsync(int battleId, int userId)
+        {
+            return await _context.Strikes
+                .Where(s => s.BattleId == battleId && s.UserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<bool> HasStrikeForTodayAsync(int battleId, int userId)
+        {
+            var today = DateTime.UtcNow.Date;
+            return await _context.Strikes.AnyAsync(s =>
+                s.BattleId == battleId &&
+                s.UserId == userId &&
+                s.Date == today);
         }
     }
 }
