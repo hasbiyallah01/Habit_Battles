@@ -12,12 +12,14 @@ namespace Habit_Battles.Core.Application.Services
         private readonly IBattleRepository _battlerepo;
         private readonly IUserRepository _userRepository;
         private readonly IStrikeRepository _strikeRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public BattleService(IBattleRepository battleRepository, IUserRepository userRepository, IStrikeRepository strikeRepository)
+        public BattleService(IBattleRepository battleRepository, IUserRepository userRepository, IStrikeRepository strikeRepository, IUnitOfWork unitOfWork)
         {
             _battlerepo = battleRepository;
             _userRepository = userRepository;
             _strikeRepository = strikeRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task<BaseResponse<BattleAcceptResponse>> AcceptBattle(int battleId, int opponentId)
         {
@@ -34,7 +36,7 @@ namespace Habit_Battles.Core.Application.Services
             ;
             battle.Status = Domain.Enums.Status.Active;
             _battlerepo.Update(battle);
-
+            await _unitOfWork.SaveAsync();
             return new BaseResponse<BattleAcceptResponse>
             {
                 IsSuccessful = true,
@@ -68,17 +70,21 @@ namespace Habit_Battles.Core.Application.Services
                 MonsterType = MonsterType.default_monster,
                 Status = Domain.Enums.Status.Pending,
                 OpponentId = request.opponentId,
+                CreatorId = userId,
+                Creator = user,
                 OpponentHealth = 100,
                 CreatorHealth = 100,
                 CreatedBy = userId.ToString(),
             };
             var response = await _battlerepo.AddAsync(battle);
+            await _unitOfWork.SaveAsync();    
             return new BaseResponse<BattleResponse>
             {
                 Message = "Battle Successfully Created and Pending",
                 IsSuccessful = true,
                 Value = new BattleResponse
                 {
+                    RefId = response.RefId,
                     EndDate = response.EndDate,
                     Id = response.Id,
                     Status = response.Status,
@@ -137,6 +143,7 @@ namespace Habit_Battles.Core.Application.Services
                   {
                       Id = battle.Id,
                       Habit = battle.Habit,
+                      RefId = battle.RefId,
                       Status = battle.Status,
                       StartDate = battle.StartDate,
                       EndDate = battle.EndDate,
@@ -184,7 +191,7 @@ namespace Habit_Battles.Core.Application.Services
                 winner.Coins += 50;
                 _userRepository.Update(winner);
             }
-
+            await _unitOfWork.SaveAsync();
 
             return new BaseResponse<EndBattleResponse>
             {
@@ -228,7 +235,7 @@ namespace Habit_Battles.Core.Application.Services
 
                 return new LeaderBoardResponse
                 {
-                     UserName = user.Username,
+                    UserName = user.Username,
                     Wins = wins,
                     Coins = user.Coins
                 };
@@ -244,71 +251,61 @@ namespace Habit_Battles.Core.Application.Services
                 Value = leaderboard
             };
         }
-        public async Task<BaseResponse<object>> HandleStrikeAsync(int battleId, int userId, bool isRealTime = false, bool isSuccess = true)
+        public async Task<BaseResponse<object>> HandleStrikeAsync(int battleId, int userId, bool isSuccess = true)
         {
             var battle = await _battlerepo.GetAsync(battleId);
             if (battle == null)
-                return new BaseResponse<object> 
-                { 
-                    IsSuccessful = false, 
-                    Message = "Battle not found" 
-                };
+                return new BaseResponse<object> { IsSuccessful = false, Message = "Battle not found" };
 
             if (battle.Status != Status.Active)
-                return new BaseResponse<object> 
-                { 
-                    IsSuccessful = false, 
-                    Message = "Battle not active" 
-                };
+                return new BaseResponse<object> { IsSuccessful = false, Message = "Battle not active" };
 
             int.TryParse(battle.CreatedBy, out var creatorId);
             var opponentId = battle.OpponentId;
 
-            if (!isRealTime)
+            if (await _strikeRepository.HasStrikeForTodayAsync(battleId, userId))
+                return new BaseResponse<object> { IsSuccessful = false, Message = "Strike already logged for today." };
+            
+            var strike = new Strike
             {
-                if (await _strikeRepository.HasStrikeForTodayAsync(battleId, userId))
-                    throw new InvalidOperationException("Strike already logged for today.");
+                BattleId = battleId,
+                UserId = userId,
+                Date = DateTime.UtcNow.Date
+            };
+            await _strikeRepository.AddAsync(strike);
 
-                var strike = new Strike
-                {
-                    BattleId = battleId,
-                    UserId = userId,
-                    Date = DateTime.UtcNow.Date
-                };
-
-                await _strikeRepository.AddAsync(strike);
-            }
-
-            if (isRealTime ? isSuccess : true)
+            if (isSuccess)
             {
                 const int damage = 20;
 
                 if (userId == creatorId)
                 {
                     battle.OpponentHealth = Math.Max(0, battle.OpponentHealth - damage);
+
                     if (battle.OpponentHealth <= 0)
                     {
                         var result = await EndBattleAsync(battleId, creatorId);
+                        await _unitOfWork.SaveAsync(); 
                         return new BaseResponse<object>
                         {
                             IsSuccessful = result.IsSuccessful,
-                            Message = "Youve used all your lives the game has ended",
-                            Value = result.Value 
+                            Message = "Opponent defeated — battle ended!",
+                            Value = result.Value
                         };
                     }
-                        
-
                 }
                 else if (userId == opponentId)
                 {
                     battle.CreatorHealth = Math.Max(0, battle.CreatorHealth - damage);
+
                     if (battle.CreatorHealth <= 0)
                     {
                         var result = await EndBattleAsync(battleId, opponentId);
+                        await _unitOfWork.SaveAsync(); 
                         return new BaseResponse<object>
                         {
                             IsSuccessful = result.IsSuccessful,
-                            Message = "Youve used all your lives the game has ended",
+                            Message = "Creator defeated — battle ended!",
                             Value = result.Value
                         };
                     }
@@ -317,58 +314,42 @@ namespace Habit_Battles.Core.Application.Services
 
             _battlerepo.Update(battle);
 
-            if (!isRealTime)
+            var allStrikes = (await _strikeRepository.GetByBattleAndUserAsync(battleId, userId))
+                                .Select(s => s.Date.Date)
+                                .Distinct()
+                                .OrderByDescending(d => d)
+                                .ToList();
+
+            int streak = 0;
+            var day = DateTime.UtcNow.Date;
+            while (allStrikes.Contains(day))
             {
-                var allStrikes = (await _strikeRepository.GetByBattleAndUserAsync(battleId, userId))
-                                    .Select(s => s.Date.Date)
-                                    .Distinct()
-                                    .OrderByDescending(d => d)
-                                    .ToList();
-
-                int streak = 0;
-                var day = DateTime.UtcNow.Date;
-                while (allStrikes.Contains(day))
-                {
-                    streak++;
-                    day = day.AddDays(-1);
-                }
-
-                const int CoinsPerStrike = 10;
-                var user = await _userRepository.GetAsync(userId);
-                if (user != null)
-                {
-                    user.Coins += CoinsPerStrike;
-                    _userRepository.Update(user);
-                }
-
-                return new BaseResponse<object>
-                {
-                    IsSuccessful = true,
-                    Message = "Strike logged successfully",
-                    Value = new StrikeResponse
-                    {
-                        BattleId = battle.Id,
-                        CreatorHealth = battle.CreatorHealth,
-                        OpponentHealth = battle.OpponentHealth,
-                        Streak = streak,
-                        CoinEarned = CoinsPerStrike,
-                        UserId = userId
-                    }
-                };
+                streak++;
+                day = day.AddDays(-1);
             }
+
+            const int CoinsPerStrike = 10;
+            var user = await _userRepository.GetAsync(userId);
+            if (user != null)
+            {
+                user.Coins += CoinsPerStrike;
+                _userRepository.Update(user);
+            }
+
+            await _unitOfWork.SaveAsync();
 
             return new BaseResponse<object>
             {
                 IsSuccessful = true,
-                Message = isSuccess ? "Attack landed!" : "Attack missed.",
-                Value = new EndBattleResponse
+                Message = "Strike logged successfully.",
+                Value = new StrikeResponse
                 {
-                    BatlleId = battle.Id,
-                    Winner = "",
-                    Loser = "",
-                    CoinsAwarded = 0,
+                    BattleId = battle.Id,
                     CreatorHealth = battle.CreatorHealth,
-                    OpponentHealth = battle.OpponentHealth
+                    OpponentHealth = battle.OpponentHealth,
+                    Streak = streak,
+                    CoinEarned = CoinsPerStrike,
+                    UserId = userId
                 }
             };
         }
@@ -418,7 +399,7 @@ namespace Habit_Battles.Core.Application.Services
                 else
                     _battlerepo.Update(battle);
             }
-
+            await _unitOfWork.SaveAsync();
             return new BaseResponse<object>
             {
                 IsSuccessful = true,
@@ -443,6 +424,8 @@ namespace Habit_Battles.Core.Application.Services
                 Habit = b.Habit,
                 Status = b.Status,
                 StartDate = b.StartDate,
+                RefId = b.RefId,
+                MonsterType = b.MonsterType,
                 EndDate = b.EndDate,
                 DurationDays = b.DurationDays,
                 CreatorHealth = b.CreatorHealth,
@@ -496,7 +479,7 @@ namespace Habit_Battles.Core.Application.Services
                 else
                     _battlerepo.Update(battle);
             }
-
+            await _unitOfWork.SaveAsync();
             return new BaseResponse<object>
             {
                 IsSuccessful = true,

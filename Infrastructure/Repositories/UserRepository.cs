@@ -18,7 +18,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             await _context.Set<User>()
                 .AddAsync(user);
-            _context.SaveChanges();
             return user;
         }
 

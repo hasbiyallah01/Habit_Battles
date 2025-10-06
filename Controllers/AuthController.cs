@@ -68,7 +68,7 @@ namespace Habit_Battles.Controllers
                 var user = await _userService.CreateUser(request);
 
                 if (user == null)
-                    return StatusCode(500, "UserService returned null");
+                    return StatusCode(500, "User service returned null");
 
                 if (!user.IsSuccessful)
                     return StatusCode(400, user.Message ?? "Registration failed");
@@ -82,7 +82,6 @@ namespace Habit_Battles.Controllers
                     UserName = user.Value.UserName,
                     Id = user.Value.Id
                 };
-
                 var token = _identityService.GenerateToken(_config["Jwt:Key"], _config["Jwt:Issuer"],response);
 
                 return Ok(new { token, user.Value, user.Message });
@@ -92,7 +91,5 @@ namespace Habit_Battles.Controllers
                 return StatusCode(500, $"Internal error: {ex.Message}");
             }
         }
-
-
     }
 }

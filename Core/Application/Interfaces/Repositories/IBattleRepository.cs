@@ -14,5 +14,6 @@ namespace Habit_Battles.Core.Application.Interfaces.Repositories
         void Remove(Battle userBattle);
         Battle Update(Battle userBattle);
         Task<bool> ExistsAsync(int id);
+        Task<IEnumerable<Battle>> GetByUserIdAsync(int userId);
     }
 }

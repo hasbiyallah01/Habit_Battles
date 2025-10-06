@@ -18,7 +18,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             await _context.Set<HabitLog>()
                 .AddAsync(log);
-            _context.SaveChanges();
             return log;
         }
 
@@ -63,7 +62,6 @@ namespace Habit_Battles.Infrastructure.Repositories
             log.IsDeleted = true;
             _context.Set<HabitLog>()
                 .Update(log);
-            _context.SaveChanges();
             return log;
         }
     }

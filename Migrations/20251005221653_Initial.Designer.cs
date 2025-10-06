@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Habit_Battles.Migrations
 {
     [DbContext(typeof(HabitBattlesContext))]
-    [Migration("20251004132648_initial")]
-    partial class initial
+    [Migration("20251005221653_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,6 +37,9 @@ namespace Habit_Battles.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("CreatorHealth")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CreatorId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("DateCreated")
@@ -76,10 +79,16 @@ namespace Habit_Battles.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<int>("WinnerId")
+                    b.Property<int?>("WinnerId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.HasIndex("OpponentId");
+
+                    b.HasIndex("WinnerId");
 
                     b.ToTable("Battles");
                 });
@@ -362,6 +371,31 @@ namespace Habit_Battles.Migrations
                     b.HasIndex("BattleId");
 
                     b.ToTable("UserBattles");
+                });
+
+            modelBuilder.Entity("Habit_Battles.Core.Domain.Entities.Battle", b =>
+                {
+                    b.HasOne("Habit_Battles.Core.Domain.Entities.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Habit_Battles.Core.Domain.Entities.User", "Opponent")
+                        .WithMany()
+                        .HasForeignKey("OpponentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Habit_Battles.Core.Domain.Entities.User", "Winner")
+                        .WithMany()
+                        .HasForeignKey("WinnerId");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Opponent");
+
+                    b.Navigation("Winner");
                 });
 
             modelBuilder.Entity("Habit_Battles.Core.Domain.Entities.HabitLog", b =>

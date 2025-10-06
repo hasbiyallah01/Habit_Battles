@@ -68,6 +68,18 @@ namespace Habit_Battles.Infrastructure.Context
                 .HasForeignKey(h => h.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Battle>()
+            .HasOne(b => b.Creator)
+            .WithMany()
+            .HasForeignKey(b => b.CreatorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Battle>()
+                .HasOne(b => b.Opponent)
+                .WithMany()
+                .HasForeignKey(b => b.OpponentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<HabitLog>()
                 .HasOne(h => h.Battle)
                 .WithMany()

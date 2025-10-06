@@ -5,6 +5,10 @@ using Habit_Battles.Models.UserModel;
 using Habit_Battles.Models;
 using System.Security.Claims;
 using Habit_Battles.Core.Application.Interfaces.Services;
+using Habit_Battles.Core.Domain.Enums;
+using Habit_Battles.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Habit_Battles.Core.Application.Services
 {
@@ -13,13 +17,15 @@ namespace Habit_Battles.Core.Application.Services
         private readonly IHttpContextAccessor _httpContext;
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IBattleRepository _battleRepository;
         private readonly IConfiguration _configuration;
-        public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, IHttpContextAccessor httpContext, IConfiguration configuration)
+        public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, IHttpContextAccessor httpContext, IConfiguration configuration, IBattleRepository battleRepository)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _httpContext = httpContext;
             _configuration = configuration;
+            _battleRepository = battleRepository;
         }
 
         public async Task<BaseResponse<UserResponseModel>> CreateUser(UserRequestModel request)
@@ -69,7 +75,7 @@ namespace Habit_Battles.Core.Application.Services
 
                 return new BaseResponse<UserResponseModel>
                 {
-                    Message = "",
+                    Message = "User registered successfully.",
                     IsSuccessful = true,
                     Value = new UserResponseModel
                     {
@@ -318,34 +324,55 @@ namespace Habit_Battles.Core.Application.Services
         public async Task<BaseResponse<LoginResponse>> Login(LoginRequest model)
         {
             var user = await _userRepository.GetAsync(model.Email);
-            if(user == null)
+            if (user == null)
             {
                 return new BaseResponse<LoginResponse>
                 {
-                    Message = "Not found",
+                    Message = "User not found.",
                     IsSuccessful = false
                 };
             }
-            if (user.Email == model.Email && BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
+
+            if (!BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
                 return new BaseResponse<LoginResponse>
                 {
-                    Message = "Login Successfull",
-                    IsSuccessful = true,
-                    Value = new LoginResponse
-                    {
-                        Id = user.Id,
-                        UserName = user.Username,
-                        Email = user.Email
-                    }
+                    Message = "Invalid credentials.",
+                    IsSuccessful = false
                 };
             }
+
+            var battles = await _battleRepository.GetByUserIdAsync(user.Id) ?? new List<Battle>();
+
+            var activeBattles = battles.Any()
+                ? battles.Select(b => new BattleSummaryDto
+                {
+                    BattleId = b.Id,
+                    Habit = b.Habit,
+                    MonsterType = b.MonsterType,
+                    OpponentName = b.Creator.Id == user.Id ? b.Opponent?.Username ?? "Unknown" : b.Creator?.Username ?? "Unknown",
+                    CreatorHealth = b.CreatorHealth,
+                    OpponentHealth = b.OpponentHealth,
+                    Status = b.Status
+                }).ToList()
+                : new List<BattleSummaryDto>();
+
             return new BaseResponse<LoginResponse>
             {
-                Message = "Invalid Credentials",
-                IsSuccessful = false
+                IsSuccessful = true,
+                Message = "Login successful.",
+                Value = new LoginResponse
+                {
+                    Id = user.Id,
+                    UserName = user.Username,
+                    Email = user.Email,
+                    CoinBalance = user.Coins,
+                    ActiveBattles = activeBattles,
+                    Streaks = user.Streaks,
+                }
             };
         }
+
         public async Task<BaseResponse<ProfileResponse>> GetProfile(int id)
         {
             var user = await _userRepository.GetAsyncWithLogs(id);
@@ -360,7 +387,7 @@ namespace Habit_Battles.Core.Application.Services
 
             return new BaseResponse<ProfileResponse>
             {
-                Message = "User Profile Retrieved Successfully",
+                Message = "User profile retrieved successfully",
                 IsSuccessful = true,
                 Value = new ProfileResponse
                 {

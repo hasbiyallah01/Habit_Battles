@@ -18,7 +18,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             await _context.Set<Purchases>()
                 .AddAsync(purchases);
-            _context.SaveChanges();
             return purchases;
         }
 
@@ -67,7 +66,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         public Purchases Update(Purchases purchases)
         {
             _context.Purchases.Update(purchases);
-            _context.SaveChangesAsync();
             return purchases;
         }
     }

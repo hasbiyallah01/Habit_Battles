@@ -32,7 +32,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             await _context.Set<Battle>()
                 .AddAsync(userBattle);
-            _context.SaveChanges();
 
             return userBattle;
         }
@@ -55,6 +54,20 @@ namespace Habit_Battles.Infrastructure.Repositories
                 .SingleOrDefaultAsync();
             return answer;
         }
+        public async Task<IEnumerable<Battle>> GetByUserIdAsync(int userId)
+        {
+            var battles = await _context.Battles
+                .Include(b => b.Creator)
+                .Include(b => b.Opponent)
+                .Where(b => !b.IsDeleted &&
+                            b.Status == Status.Active &&
+                            (b.CreatedBy == userId.ToString() || b.OpponentId == userId))
+                .ToListAsync();
+
+            return battles;
+        }
+
+
 
         public async Task<Battle> GetAsync(Expression<Func<Battle, bool>> exp)
         {
@@ -77,7 +90,6 @@ namespace Habit_Battles.Infrastructure.Repositories
             _context.Set<Battle>()
                 .Update(userBattle);
 
-            _context.SaveChangesAsync();
             return userBattle;
         }
     }

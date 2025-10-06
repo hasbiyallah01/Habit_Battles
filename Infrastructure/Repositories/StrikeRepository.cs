@@ -17,7 +17,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             await _context.Set<Strike>()
                 .AddAsync(strike);
-            _context.SaveChanges();
             return strike;
         }
 
@@ -66,7 +65,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         public Strike Update(Strike strike)
         {
             _context.Strikes.Update(strike);
-            _context.SaveChangesAsync();
             return strike;
         }
 
@@ -79,11 +77,11 @@ namespace Habit_Battles.Infrastructure.Repositories
 
         public async Task<bool> HasStrikeForTodayAsync(int battleId, int userId)
         {
-            var today = DateTime.UtcNow.Date;
+
             return await _context.Strikes.AnyAsync(s =>
-                s.BattleId == battleId &&
-                s.UserId == userId &&
-                s.Date == today);
+                    s.UserId == userId &&
+                    s.BattleId == battleId &&
+                    s.Date == DateTime.UtcNow.Date);
         }
     }
 }

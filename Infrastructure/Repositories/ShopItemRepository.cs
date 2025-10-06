@@ -17,7 +17,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         {
             await _context.Set<ShopItem>()
                 .AddAsync(shopItem);
-            _context.SaveChanges();
             return shopItem;
         }
 
@@ -60,7 +59,6 @@ namespace Habit_Battles.Infrastructure.Repositories
         public ShopItem Update(ShopItem shopItem)
         {
             _context.ShopItems.Update(shopItem);
-            _context.SaveChangesAsync();
             return shopItem;
         }
     }

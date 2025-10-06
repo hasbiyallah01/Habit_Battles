@@ -31,11 +31,11 @@ namespace Habit_Battles.Controllers
             var response = await _battleService.CreateBattle(request, user.Value.Id);
             if (response.IsSuccessful)
             {
-                return Ok(new { user.Value, user.Message });
+                return Ok(new { response.Value, response.Message });
             }
             else
             {
-                return StatusCode(400, user.Message);
+                return StatusCode(400, response.Message);
             }
         }
 
@@ -66,19 +66,19 @@ namespace Habit_Battles.Controllers
         {
             var response = await _battleService.EndBattleAsync(battleId, winnerId);
             if (response == null) return NotFound("Battle not found");
-            return Ok(response);
+            return Ok(new { response.Value, response.Message });
         }
 
         [HttpGet("leaderboard")]
         public async Task<IActionResult> GetLeaderBoard()
         {
             var response = await _battleService.GetLeaderBoardAsync();
-            return Ok(response);
+            return Ok(new { response.Value, response.Message });
         }
 
 
         [HttpPost("{battleId}/habit-strike")]
-        public async Task<IActionResult> LogHabitStrike(int battleId, bool realtime, bool isSuccess)
+        public async Task<IActionResult> LogHabitStrike(int battleId, bool isSuccess)
         {
             try
             {
@@ -86,9 +86,9 @@ namespace Habit_Battles.Controllers
                 if (user?.Value == null)
                     return Unauthorized(new { message = "Authentication token is required" });
 
-                var response = await _battleService.HandleStrikeAsync(battleId, user.Value.Id,realtime,isSuccess);
+                var response = await _battleService.HandleStrikeAsync(battleId, user.Value.Id,isSuccess);
                 if (response == null) return NotFound("Battle not found or inactive");
-                return Ok(response);
+                return Ok(new { response.Value, response.Message});
             }
             catch (InvalidOperationException ex)
             {
@@ -103,7 +103,7 @@ namespace Habit_Battles.Controllers
             if (!response.IsSuccessful)
                 return BadRequest(response);
 
-            return Ok(response);
+            return Ok(new { response.Value, response.Message });
         }
 
         [HttpPost("process-daily-result")]
@@ -117,7 +117,7 @@ namespace Habit_Battles.Controllers
             if (!response.IsSuccessful)
                 return BadRequest(response);
 
-            return Ok(response);
+            return Ok(new { response.Value, response.Message });
         }
 
         [HttpPost("process-daily-results")]
@@ -127,7 +127,7 @@ namespace Habit_Battles.Controllers
             if (!response.IsSuccessful)
                 return BadRequest(response);
 
-            return Ok(response);
+            return Ok(new { response.Value, response.Message });
         }
     }
 }
