@@ -10,8 +10,8 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 ### Core Functionality
 
 * **User Authentication** with JWT-based security
-* **Habit and Battle Management** — create, join, and track habit battles
-* **Strike System** — register daily habit completions (“strikes”)
+* **Habit and Battle Management** create, join, and track habit battles
+* **Strike System** register daily habit completions (“strikes”)
 * **Health and Streak Tracking** for each user
 * **Coins and Rewards** for consistent habit completion
 
@@ -64,13 +64,13 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 1. **Clone the repository**
 
    ```bash
-   git clone https:/hasbiyallah01/github.com//habit-battles-backend.git
+   https://github.com/hasbiyallah01/Habit_Battles.git
    ```
 
 2. **Navigate to the project folder**
 
    ```bash
-   cd habit-battles-backend
+   cd Habit_Battles
    ```
 
 3. **Restore dependencies**
