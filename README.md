@@ -1,6 +1,6 @@
 # Habit Battles
 
-A gamified habit tracker that transforms personal growth into friendly competition. Two friends compete by completing daily habits, with each completed task counting as a “strike” against a shared monster. Missing a day allows the monster to heal or retaliate, introducing a fun and challenging sense of accountability.
+**Habit Battles** ⚔️, a gamified habit tracker where two friends compete by completing daily habits. Each habit completed is a “strike” against a shared monster. Missing a day allows the monster to heal or strike back. First person to slack loses. Players earn coins and badges they can use to unlock avatars, themes, and new monsters.
 
 Players earn coins and badges that can be used to unlock avatars, themes, and new monsters, making habit-building engaging, consistent, and rewarding.
 
@@ -8,41 +8,35 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 
 ## Features
 
-### 1v1 Habit Battles
+### Core Functionality
 
-Compete with friends to stay consistent with daily habits.
+* **User Authentication** with JWT-based security
+* **Habit and Battle Management** — create, join, and track habit battles
+* **Strike System** — register daily habit completions (“strikes”)
+* **Health and Streak Tracking** for each user
+* **Coins and Rewards** for consistent habit completion
 
-### Dynamic Monsters
+### Game Logic
 
-Each battle features a shared monster that reacts to your progress — healing or striking back depending on performance.
+* **Real-time updates** using SignalR
+* **Automatic health deduction** and strike cooldown
+* **Battle outcome determination** based on performance
 
-### Rewards System
+### Admin Tools
 
-Earn coins and badges for streaks and victories.
-
-### Customization
-
-Unlock new avatars, battle themes, and monster types as you progress.
-
-### Progress Tracking
-
-View daily, weekly, and monthly consistency reports to monitor growth and performance.
+* Manage users and battles
+* Reset or configure battle rules (optional)
 
 ---
 
 ## Tech Stack
 
-### Frontend
-
-* Next.js 14 with TypeScript
-* Tailwind CSS for UI styling
-* SignalR or WebSockets for live battle updates
-
-### Backend
-
-* C# .NET 8 Web API
-* PostgreSQL database
-* JWT-based or OAuth authentication
+* **Language:** C#
+* **Framework:** .NET 8 Web API
+* **Database:** PostgreSQL
+* **Real-time Communication:** SignalR / WebSockets
+* **Authentication:** JWT-based authentication
+* **Hosting (Recommended):** Render / Azure App Service
 
 ---
 
@@ -50,15 +44,10 @@ View daily, weekly, and monthly consistency reports to monitor growth and perfor
 
 ### Prerequisites
 
-* Node.js 18+
 * .NET 8 SDK
-* PostgreSQL
+* PostgreSQL access
 
----
-
-### Environment Variables
-
-#### Backend (`appsettings.json`)
+### Environment Variables (`appsettings.json`)
 
 ```json
 {
@@ -66,48 +55,65 @@ View daily, weekly, and monthly consistency reports to monitor growth and perfor
     "DefaultConnection": "*****************************"
   },
   "JwtSettings": {
-    "SecretKey": "***************************",
-    "Issuer": "***************************",
-    "Audience": "***************************"
+    "Issuer": "*****************************",
+    "Audience": "*****************************",
+    "SecretKey": "*****************************"
   }
 }
 ```
 
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https:/hasbiyallah01/github.com//habit-battles-backend.git
+   ```
+
+2. **Navigate to the project folder**
+
+   ```bash
+   cd habit-battles-backend
+   ```
+
+3. **Restore dependencies**
+
+   ```bash
+   dotnet restore
+   ```
+
+4. **Run database migrations** (if applicable)
+
+   ```bash
+   dotnet ef database update
+   ```
+
+5. **Start the application**
+
+   ```bash
+   dotnet run
+   ```
+
+---
+## Instructions
+
+1. **Signup / Login**
+2. Go to the **Dashboard**
+3. Click **Create Habit**
+4. Select or type your habit, choose a duration, and enter your opponent’s email
+5. Use this opponent email for testing:
+
+   ```
+   user@example.com
+   ```
+6. Once created, you’ll be redirected to the battle page — this is where you **strike** after completing your habit for the day.
+
+   * You can **strike only once per day**.
+   * Each successful strike gives you **streaks and coins**.
+   * Your opponent **loses health** when you strike.
 ---
 
-## Installation
+## Frontend Integration
 
-### Clone the repository
-
-```bash
-git clone https://github.com/hasbiyallah01/habit-battles.git
-```
-
-### Install backend dependencies
-
-```bash
-cd backend
-dotnet restore
-```
-
-### Run the applications
-
-```bash
-# Backend
-cd backend && dotnet run
-```
-
----
-
-## Project Structure
-
-```
-├── backend/           # .NET 8 Web API
-└── README.md
-```
-
----
-
-## Status
-
-This project is still in active development — expect updates and potential feature changes as it evolves.
+The backend serves as the API layer for the **Habit Battles Frontend**:
+👉 [Habit Battles Frontend Repository](https://github.com/your-username/habit-battles-frontend)
