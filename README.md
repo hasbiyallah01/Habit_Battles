@@ -111,4 +111,4 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 ## Frontend Integration
 
 The backend serves as the API layer for the **Habit Battles Frontend**:
-👉 [Habit Battles Frontend Repository](https://github.com/your-username/habit-battles-frontend)
+👉 [Habit Battles Frontend Repository](https://github.com/segunojo1/habit-battles)
