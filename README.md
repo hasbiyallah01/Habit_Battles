@@ -80,14 +80,7 @@ View daily, weekly, and monthly consistency reports to monitor growth and perfor
 ### Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/habit-battles.git
-```
-
-### Install frontend dependencies
-
-```bash
-cd frontend
-npm install
+git clone https://github.com/hasbiyallah01/habit-battles.git
 ```
 
 ### Install backend dependencies
@@ -100,9 +93,6 @@ dotnet restore
 ### Run the applications
 
 ```bash
-# Frontend
-cd frontend && npm run dev
-
 # Backend
 cd backend && dotnet run
 ```
@@ -112,7 +102,6 @@ cd backend && dotnet run
 ## Project Structure
 
 ```
-├── frontend/          # Next.js frontend application
 ├── backend/           # .NET 8 Web API
 └── README.md
 ```
