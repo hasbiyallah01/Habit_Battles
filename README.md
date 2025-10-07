@@ -4,7 +4,6 @@
 
 Players earn coins and badges that can be used to unlock avatars, themes, and new monsters, making habit-building engaging, consistent, and rewarding.
 
----
 
 ## Features
 
@@ -27,7 +26,6 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 * Manage users and battles
 * Reset or configure battle rules (optional)
 
----
 
 ## Tech Stack
 
@@ -38,7 +36,6 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 * **Authentication:** JWT-based authentication
 * **Hosting (Recommended):** Render / Azure App Service
 
----
 
 ## Getting Started
 
@@ -94,7 +91,6 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
    dotnet run
    ```
 
----
 ## Instructions
 
 1. **Signup / Login**
@@ -111,7 +107,6 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
    * You can **strike only once per day**.
    * Each successful strike gives you **streaks and coins**.
    * Your opponent **loses health** when you strike.
----
 
 ## Frontend Integration
 
