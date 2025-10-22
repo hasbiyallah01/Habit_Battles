@@ -112,3 +112,4 @@ Players earn coins and badges that can be used to unlock avatars, themes, and ne
 
 The backend serves as the API layer for the **Habit Battles Frontend**:
 👉 [Habit Battles Frontend Repository](https://github.com/segunojo1/habit-battles)
+[![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
